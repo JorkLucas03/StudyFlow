@@ -3,7 +3,7 @@ export const appInfo = {
   tagline: 'Sistema ligero para controlar entregas agiles con evidencia DevOps.',
   summary:
     'Una landing funcional con tablero de sprint, control de calidad y flujo de despliegue pensado para explicar cambios en vivo.',
-  repositoryUrl: 'https://github.com/TU_USUARIO/agileflow-devops',
+  repositoryUrl: 'https://github.com/JorkLucas03/agileflow-devops',
   cloudRunUrl: 'https://agileflow-devops-xxxxx-uc.a.run.app',
 };
 
