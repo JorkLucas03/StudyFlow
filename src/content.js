@@ -4,7 +4,7 @@ export const appInfo = {
   summary:
     'Una landing funcional con tablero de sprint, control de calidad y flujo de despliegue pensado para explicar cambios en vivo.',
   repositoryUrl: 'https://github.com/JorkLucas03/agileflow-devops',
-  cloudRunUrl: 'https://agileflow-devops-xxxxx-uc.a.run.app',
+  cloudRunUrl: 'https://agileflow-devops-slttpg4z3a-uc.a.run.app',
 };
 
 export const qualityAttributes = [
