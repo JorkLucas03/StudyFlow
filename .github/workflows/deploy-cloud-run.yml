@@ -6,22 +6,20 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  SERVICE_NAME: agileflow-devops
-  REGION: us-central1
-
 jobs:
   deploy:
     name: Build and deploy
     runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: agileflow-devops
+      REGION: us-central1
     permissions:
       contents: read
       id-token: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -33,7 +31,7 @@ jobs:
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v3
         with:
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           source: .
