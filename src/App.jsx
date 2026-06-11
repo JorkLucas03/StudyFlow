@@ -102,7 +102,7 @@ function App() {
   }));
 
   const plan = useMemo(() => buildStudyPlan(form), [form]);
-  const themeLabel = theme === 'morning' ? 'Noche' : 'Manana';
+  const themeLabel = theme === 'morning' ? 'Noche' : 'Dia';
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
