@@ -72,9 +72,28 @@ Backend FastAPI en AWS
 
 Por ahora el plan se genera en el frontend para dejar lista la experiencia visual. En la siguiente fase, el formulario puede enviar los mismos datos a un backend FastAPI desplegado en AWS sin cambiar la pantalla principal.
 
-## Despliegue en Google Cloud Run
+## Despliegue recomendado en Google Cloud Run
 
-El contenedor sirve la app con Nginx en el puerto `8080`, compatible con Cloud Run.
+El proyecto esta preparado para desplegarse como contenedor en Cloud Run usando el puerto `8080`.
+
+Para esta practica, la forma mas simple y estable es desplegar desde Google Cloud Run conectado al repositorio:
+
+1. Ir a Cloud Run.
+2. Crear o editar el servicio `studyflow`.
+3. Elegir despliegue desde repositorio.
+4. Conectar el repositorio de GitHub.
+5. Usar el Dockerfile del proyecto.
+6. Configurar el puerto del contenedor en `8080`.
+7. Desplegar una nueva revision.
+
+Configuracion recomendada:
+
+```text
+Nombre del servicio: studyflow
+Puerto del contenedor: 8080
+```
+
+Si quieres probar el contenedor localmente:
 
 ```bash
 docker build -t studyflow-frontend .
@@ -85,14 +104,14 @@ docker run -p 8080:8080 studyflow-frontend
 
 ```text
 .
-├── Dockerfile
-├── nginx.conf
-├── src/
-│   ├── App.jsx
-│   ├── content.js
-│   ├── main.jsx
-│   └── styles.css
-├── tests/
-│   └── studyflow.spec.js
-└── README.md
+|-- Dockerfile
+|-- nginx.conf
+|-- src/
+|   |-- App.jsx
+|   |-- content.js
+|   |-- main.jsx
+|   `-- styles.css
+|-- tests/
+|   `-- studyflow.spec.js
+`-- README.md
 ```
