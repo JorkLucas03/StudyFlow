@@ -1,10 +1,8 @@
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const configuredApiUrl = import.meta.env.VITE_API_URL || '';
+const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const API_URL = (configuredApiUrl || (isLocalHost ? 'http://localhost:8000' : '')).replace(/\/$/, '');
 
 async function apiRequest(path, options = {}) {
-  if (!API_URL) {
-    throw new Error('StudyFlow API URL is not configured');
-  }
-
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {

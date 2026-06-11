@@ -52,6 +52,8 @@ Si el backend esta en otra URL, crea un archivo `.env.local` para el frontend:
 VITE_API_URL=http://localhost:8000
 ```
 
+En despliegues con Docker/Cloud Run, el frontend usa `/api` en el mismo dominio y Nginx reenvia esas peticiones al backend. La URL por defecto del backend se define en el `Dockerfile` con `BACKEND_API_URL` y se puede sobrescribir como variable de entorno del contenedor.
+
 ## Compilar
 
 ```bash
@@ -133,6 +135,8 @@ PostgreSQL en Amazon RDS
 ```
 
 El frontend y el backend se mantienen separados. En desarrollo el backend usa SQLite; en AWS usa PostgreSQL configurando `DATABASE_URL`.
+
+Para el frontend desplegado en Cloud Run, no apuntes el navegador directo al dominio HTTP de Elastic Beanstalk. El contenedor de Nginx publica `/api` y evita problemas de CORS o contenido mixto entre HTTPS y HTTP.
 
 ## Despliegue backend en AWS Elastic Beanstalk
 
