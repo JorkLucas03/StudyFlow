@@ -349,6 +349,12 @@ h3 {
   font-weight: 800;
 }
 
+.apiMessage.validation {
+  border-color: #ffe09b;
+  color: #6f4a00;
+  background: #fff8df;
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -404,6 +410,20 @@ select:focus,
 textarea:focus {
   border-color: rgb(15 143 134 / 70%);
   box-shadow: 0 0 0 4px rgb(15 143 134 / 12%);
+}
+
+.hasError input,
+.hasError select,
+.hasError textarea {
+  border-color: #d85b39;
+  box-shadow: 0 0 0 4px rgb(216 91 57 / 12%);
+}
+
+.fieldError {
+  color: #b43a1b;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.35;
 }
 
 .wideField {

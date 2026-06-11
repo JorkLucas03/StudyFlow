@@ -27,4 +27,15 @@ test('muestra StudyFlow y actualiza el plan de estudio', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Arrays' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Checklist para llegar con calma' })).toBeVisible();
   expect(requests.length).toBeGreaterThan(0);
+
+  await page.waitForTimeout(500);
+  const requestsBeforeInvalidInput = requests.length;
+  await page.getByLabel('Horas por dia').fill('12');
+  await expect(page.getByText('Ingresa entre 1 y 8 horas por dia.').first()).toBeVisible();
+  await expect(page.getByText('No se pudo conectar con la API. Revisa que FastAPI este activo.')).toHaveCount(0);
+  await page.waitForTimeout(500);
+  expect(requests.length).toBe(requestsBeforeInvalidInput);
+
+  await page.getByLabel('Horas por dia').fill('3');
+  await expect(page.getByText('Ingresa entre 1 y 8 horas por dia.')).toHaveCount(0);
 });
