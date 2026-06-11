@@ -533,6 +533,18 @@ textarea:focus {
   padding-top: 74px;
 }
 
+.savedPlansSection .sectionHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: none;
+}
+
+.syncButton {
+  flex: 0 0 auto;
+}
+
 .emptyPlans {
   padding: 22px;
   border: 1px dashed var(--line);
@@ -1044,6 +1056,11 @@ textarea:focus {
   .button,
   .plannerActions {
     width: 100%;
+  }
+
+  .savedPlansSection .sectionHeader {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .panelHeader {

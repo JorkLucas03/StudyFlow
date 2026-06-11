@@ -120,6 +120,10 @@ export function createStudyPlan(payload, options = {}) {
   });
 }
 
+export function fetchStudyPlans(options = {}) {
+  return apiRequest('/api/study-plans', options);
+}
+
 export function updateStudyPlan(id, payload, options = {}) {
   return apiRequest(`/api/study-plans/${id}`, {
     ...options,

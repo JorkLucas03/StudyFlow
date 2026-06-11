@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -11,6 +11,7 @@ import {
   Moon,
   NotebookPen,
   Plus,
+  RefreshCw,
   Save,
   Sparkles,
   Sun,
@@ -25,7 +26,7 @@ import {
   focusOptions,
   studyMethods,
 } from './content';
-import { createStudyPlan, fetchContent } from './api';
+import { createStudyPlan, fetchContent, fetchStudyPlans } from './api';
 
 const difficultyWeight = {
   Baja: 0.85,
@@ -191,12 +192,12 @@ function countTasks(plan) {
   return plan.dailyPlan.reduce((total, session) => total + session.tasks.length, 0);
 }
 
-function buildStoredPlan(plan, form, source) {
+function buildStoredPlan(plan, form, source, existingPlan = {}) {
   const now = new Date().toISOString();
   return {
     ...plan,
-    localId: makeLocalId(),
-    backendId: plan.id ?? null,
+    localId: plan.id ? `api-${plan.id}` : existingPlan.localId || makeLocalId(),
+    backendId: plan.id ?? existingPlan.backendId ?? null,
     source,
     subject: form.subject.trim(),
     examDate: form.examDate,
@@ -204,15 +205,29 @@ function buildStoredPlan(plan, form, source) {
     difficulty: form.difficulty,
     focus: form.focus,
     topicsInput: form.topics.trim(),
-    completedTasks: {},
-    createdAt: plan.createdAt || now,
-    savedAt: now,
+    completedTasks: existingPlan.completedTasks || {},
+    createdAt: plan.createdAt || existingPlan.createdAt || now,
+    updatedAt: plan.updatedAt || existingPlan.updatedAt || now,
+    savedAt: plan.updatedAt || now,
+  };
+}
+
+function formFromApiPlan(plan) {
+  return {
+    subject: plan.subject || '',
+    examDate: plan.examDate || formatInputDate(addDays(new Date(), 14)),
+    hoursPerDay: plan.hoursPerDay || 2,
+    difficulty: plan.difficulty || 'Media',
+    focus: plan.focus || 'Examen parcial',
+    topics: plan.topicsInput || plan.topics?.join(', ') || '',
   };
 }
 
 function App() {
   const agendaRef = useRef(null);
   const plannerRef = useRef(null);
+  const isMountedRef = useRef(false);
+  const apiSyncSignatureRef = useRef('');
   const [theme, setTheme] = useState(() => localStorage.getItem(STORAGE_KEYS.theme) || 'morning');
   const [form, setForm] = useState(() => ({
     subject: 'Matematicas',
@@ -246,6 +261,73 @@ function App() {
   const progressPercent = taskTotal ? Math.round((completedTotal / taskTotal) * 100) : 0;
   const themeLabel = theme === 'morning' ? 'Noche' : 'Dia';
   const activePlanSource = activePlan?.source === 'api' ? 'API' : activePlan ? 'Local' : 'Vista previa';
+
+  const syncLatestApiPlan = useCallback(async ({ showMessage = false } = {}) => {
+    if (showMessage) {
+      setApiStatus('saving');
+      setApiMessage('Sincronizando planes desde la API...');
+    }
+
+    try {
+      const plans = await fetchStudyPlans();
+      if (!isMountedRef.current) return;
+
+      const latestPlan = plans[0];
+      if (!latestPlan) {
+        if (showMessage) {
+          setApiStatus('ready');
+          setApiMessage('La API no tiene planes guardados todavia.');
+        }
+        return;
+      }
+
+      const signature = `${latestPlan.id}:${latestPlan.updatedAt || latestPlan.createdAt || ''}`;
+      if (apiSyncSignatureRef.current === signature) {
+        if (showMessage) {
+          setApiStatus('ready');
+          setApiMessage('Ya estas viendo el ultimo plan guardado en la API.');
+        }
+        return;
+      }
+
+      apiSyncSignatureRef.current = signature;
+      const nextForm = formFromApiPlan(latestPlan);
+      const nextLocalId = `api-${latestPlan.id}`;
+
+      setSavedPlans((current) => {
+        const existingPlan = current.find((item) => item.backendId === latestPlan.id);
+        const importedPlan = buildStoredPlan(latestPlan, nextForm, 'api', existingPlan);
+        const otherPlans = current.filter(
+          (item) => item.localId !== importedPlan.localId && item.backendId !== importedPlan.backendId,
+        );
+        return [importedPlan, ...otherPlans].slice(0, 8);
+      });
+      setForm(nextForm);
+      setActivePlanId(nextLocalId);
+      setApiStatus('ready');
+      setApiMessage(`Plan de ${nextForm.subject} sincronizado desde la API.`);
+    } catch {
+      if (!isMountedRef.current || !showMessage) return;
+      setApiStatus('error');
+      setApiMessage('No se pudo sincronizar con la API en este momento.');
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const initialSyncId = window.setTimeout(() => syncLatestApiPlan(), 0);
+    const intervalId = window.setInterval(() => syncLatestApiPlan(), 4000);
+    return () => {
+      window.clearTimeout(initialSyncId);
+      window.clearInterval(intervalId);
+    };
+  }, [syncLatestApiPlan]);
 
   useEffect(() => {
     let isMounted = true;
@@ -598,12 +680,18 @@ function App() {
 
       <section className="section savedPlansSection" aria-label="Mis planes guardados">
         <div className="sectionHeader compact">
-          <span className="eyebrow">
-            <Save size={16} aria-hidden="true" />
-            Mis planes
-          </span>
-          <h2>Planes guardados en este navegador</h2>
-          <p>Recarga la pagina y estos planes seguiran aqui para que el profesor pueda verificar el guardado.</p>
+          <div>
+            <span className="eyebrow">
+              <Save size={16} aria-hidden="true" />
+              Mis planes
+            </span>
+            <h2>Planes guardados en este navegador</h2>
+            <p>Tambien se importa aqui el ultimo plan creado desde /docs o cualquier cliente REST.</p>
+          </div>
+          <button className="button ghost syncButton" onClick={() => syncLatestApiPlan({ showMessage: true })} type="button">
+            Sincronizar API
+            <RefreshCw size={18} aria-hidden="true" />
+          </button>
         </div>
 
         {savedPlans.length === 0 ? (
