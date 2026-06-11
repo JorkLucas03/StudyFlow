@@ -73,10 +73,6 @@ test('muestra en el frontend un plan creado directamente en la API', async ({ pa
 
   await page.goto('/');
 
-  await expect(page.getByText(`Plan de ${subject} sincronizado desde la API.`)).toHaveCount(0);
-  await expect(page.locator('.savedPlan').filter({ hasText: subject })).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Sincronizar API' }).click();
   await expect(page.getByText(`Plan de ${subject} sincronizado desde la API.`)).toBeVisible({
     timeout: 8000,
   });
@@ -89,6 +85,6 @@ test('muestra en el frontend un plan creado directamente en la API', async ({ pa
   await expect(page.locator('.savedPlan').filter({ hasText: subject })).toHaveCount(0);
 
   await page.reload();
-  await page.getByRole('button', { name: 'Sincronizar API' }).click();
+  await page.waitForTimeout(5500);
   await expect(page.locator('.savedPlan').filter({ hasText: subject })).toHaveCount(0);
 });

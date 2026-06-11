@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -44,6 +44,7 @@ const MIN_HOURS_PER_DAY = 1;
 const MAX_HOURS_PER_DAY = 8;
 const MAX_SUBJECT_LENGTH = 120;
 const MAX_TOPICS_LENGTH = 600;
+const API_SYNC_INTERVAL_MS = 5000;
 
 const fallbackPlan = {
   coverage: 0,
@@ -240,6 +241,10 @@ function App() {
   const plannerRef = useRef(null);
   const isMountedRef = useRef(false);
   const apiSyncSignatureRef = useRef('');
+  const activePlanIdRef = useRef(null);
+  const savedPlansRef = useRef([]);
+  const userChangeVersionRef = useRef(0);
+  const hasUserEditedFormRef = useRef(false);
   const [theme, setTheme] = useState(() => localStorage.getItem(STORAGE_KEYS.theme) || 'morning');
   const [form, setForm] = useState(() => ({
     subject: 'Matematicas',
@@ -276,7 +281,9 @@ function App() {
   const themeLabel = theme === 'morning' ? 'Noche' : 'Dia';
   const activePlanSource = activePlan?.source === 'api' ? 'API' : activePlan ? 'Local' : 'Vista previa';
 
-  async function syncLatestApiPlan({ showMessage = false } = {}) {
+  const syncLatestApiPlan = useCallback(async ({ showMessage = false } = {}) => {
+    const syncVersion = userChangeVersionRef.current;
+
     if (showMessage) {
       setApiStatus('saving');
       setApiMessage('Sincronizando planes desde la API...');
@@ -285,6 +292,7 @@ function App() {
     try {
       const plans = await fetchStudyPlans();
       if (!isMountedRef.current) return;
+      if (!showMessage && syncVersion !== userChangeVersionRef.current) return;
 
       const latestPlan = plans[0];
       if (!latestPlan) {
@@ -307,6 +315,8 @@ function App() {
       apiSyncSignatureRef.current = signature;
       const nextForm = formFromApiPlan(latestPlan);
       const nextLocalId = `api-${latestPlan.id}`;
+      const shouldOpenImportedPlan =
+        showMessage || (!hasUserEditedFormRef.current && !activePlanIdRef.current && savedPlansRef.current.length === 0);
 
       setSavedPlans((current) => {
         const existingPlan = current.find((item) => item.backendId === latestPlan.id);
@@ -316,16 +326,30 @@ function App() {
         );
         return [importedPlan, ...otherPlans].slice(0, 8);
       });
-      setForm(nextForm);
-      setActivePlanId(nextLocalId);
+
+      if (shouldOpenImportedPlan) {
+        setForm(nextForm);
+        setActivePlanId(nextLocalId);
+      }
+
       setApiStatus('ready');
-      setApiMessage(`Plan de ${nextForm.subject} sincronizado desde la API.`);
+      if (showMessage || shouldOpenImportedPlan) {
+        setApiMessage(`Plan de ${nextForm.subject} sincronizado desde la API.`);
+      }
     } catch {
       if (!isMountedRef.current || !showMessage) return;
       setApiStatus('error');
       setApiMessage('No se pudo sincronizar con la API en este momento.');
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    activePlanIdRef.current = activePlanId;
+  }, [activePlanId]);
+
+  useEffect(() => {
+    savedPlansRef.current = savedPlans;
+  }, [savedPlans]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -333,6 +357,20 @@ function App() {
       isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    const syncTimer = window.setTimeout(() => {
+      syncLatestApiPlan();
+    }, 800);
+    const syncInterval = window.setInterval(() => {
+      syncLatestApiPlan();
+    }, API_SYNC_INTERVAL_MS);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+      window.clearInterval(syncInterval);
+    };
+  }, [syncLatestApiPlan]);
 
   useEffect(() => {
     let isMounted = true;
@@ -374,6 +412,8 @@ function App() {
   }, [theme]);
 
   function updateForm(field, value) {
+    userChangeVersionRef.current += 1;
+    hasUserEditedFormRef.current = true;
     setForm((current) => ({ ...current, [field]: value }));
   }
 
@@ -391,6 +431,7 @@ function App() {
   }
 
   function openPlan(plan) {
+    userChangeVersionRef.current += 1;
     setActivePlanId(plan.localId);
     setForm({
       subject: plan.subject,
@@ -407,6 +448,7 @@ function App() {
   }
 
   async function removePlan(localId) {
+    userChangeVersionRef.current += 1;
     const planToRemove = savedPlans.find((item) => item.localId === localId);
     if (!planToRemove) return;
 
@@ -426,15 +468,22 @@ function App() {
     }
 
     apiSyncSignatureRef.current = '';
-    setSavedPlans((current) => current.filter((item) => item.localId !== localId));
+    setSavedPlans((current) => {
+      const nextPlans = current.filter((item) => item.localId !== localId);
+      localStorage.setItem(STORAGE_KEYS.plans, JSON.stringify(nextPlans));
+      return nextPlans;
+    });
     if (activePlanId === localId) {
       setActivePlanId(null);
+      localStorage.removeItem(STORAGE_KEYS.activePlanId);
     }
     setApiStatus('ready');
     setApiMessage(`Plan de ${planToRemove.subject} eliminado.`);
   }
 
   function resetPlanForm() {
+    userChangeVersionRef.current += 1;
+    hasUserEditedFormRef.current = true;
     setActivePlanId(null);
     setForm({
       subject: '',
@@ -449,6 +498,9 @@ function App() {
   }
 
   async function handleCreatePlan() {
+    userChangeVersionRef.current += 1;
+    hasUserEditedFormRef.current = true;
+
     if (!validation.isValid) {
       setApiStatus('validation');
       setApiMessage(validation.message);
