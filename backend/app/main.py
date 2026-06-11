@@ -37,6 +37,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+DEPLOYMENT_CHECK = "ci-cd-prueba-2026-06-11"
+
 
 def to_response(plan: StudyPlan) -> StudyPlanResponse:
     return StudyPlanResponse(
@@ -83,7 +85,7 @@ def apply_payload(plan: StudyPlan, payload: StudyPlanPayload) -> StudyPlan:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "deploymentCheck": DEPLOYMENT_CHECK}
 
 
 @app.get("/")

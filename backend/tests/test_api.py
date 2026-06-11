@@ -54,7 +54,10 @@ def test_health(client: TestClient):
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {
+        "status": "ok",
+        "deploymentCheck": "ci-cd-prueba-2026-06-11",
+    }
 
 
 def test_root_shows_api_info(client: TestClient):
