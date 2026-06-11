@@ -2,19 +2,20 @@
   color-scheme: light;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f7faf9;
-  color: #14201f;
-  --ink: #14201f;
-  --muted: #61706d;
-  --line: #dfe7e4;
+  background: #f6f8f7;
+  color: #17211f;
+  --ink: #17211f;
+  --muted: #64716f;
+  --line: #dbe5e2;
   --surface: #ffffff;
-  --surface-soft: #eef7f4;
-  --teal: #0e8f87;
-  --teal-dark: #08615d;
-  --coral: #f0624d;
+  --surface-soft: #edf6f3;
+  --teal: #0f8f86;
+  --teal-dark: #09635e;
+  --navy: #1d2d50;
+  --coral: #ec6a5c;
   --yellow: #f3bd45;
-  --green: #2fa66a;
-  --shadow: 0 24px 80px rgb(20 32 31 / 14%);
+  --green: #2d9b6c;
+  --shadow: 0 24px 70px rgb(23 33 31 / 13%);
 }
 
 * {
@@ -32,6 +33,9 @@ body {
 
 body,
 button,
+input,
+select,
+textarea,
 a {
   font: inherit;
 }
@@ -52,10 +56,11 @@ main {
 
 .hero {
   min-height: 92vh;
-  padding: 24px clamp(18px, 4vw, 56px) 60px;
+  padding: 24px clamp(18px, 4vw, 56px) 70px;
   background:
-    linear-gradient(110deg, rgb(255 255 255 / 95%) 0%, rgb(255 255 255 / 78%) 38%, rgb(255 255 255 / 20%) 76%),
-    linear-gradient(135deg, #e5f6f0 0%, #fff6eb 42%, #eaf8fb 100%);
+    linear-gradient(120deg, rgb(255 255 255 / 96%) 0%, rgb(255 255 255 / 80%) 46%, rgb(245 249 248 / 72%) 100%),
+    radial-gradient(circle at 82% 24%, rgb(236 106 92 / 18%), transparent 28%),
+    linear-gradient(135deg, #e7f5f2 0%, #fff7e8 46%, #eef2fb 100%);
 }
 
 .nav {
@@ -71,8 +76,9 @@ main {
 .eyebrow,
 .button,
 .navLinks,
-.links a,
-.changeList div {
+.cardTop,
+.trackCard button,
+.topic {
   display: inline-flex;
   align-items: center;
 }
@@ -80,25 +86,25 @@ main {
 .brand {
   gap: 10px;
   min-height: 44px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .brandMark {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   color: white;
-  background: var(--teal);
+  background: var(--navy);
 }
 
 .navLinks {
   gap: 8px;
   padding: 6px;
-  border: 1px solid rgb(20 32 31 / 10%);
+  border: 1px solid rgb(23 33 31 / 10%);
   border-radius: 8px;
-  background: rgb(255 255 255 / 68%);
+  background: rgb(255 255 255 / 74%);
   backdrop-filter: blur(16px);
 }
 
@@ -107,19 +113,19 @@ main {
   border-radius: 6px;
   color: var(--muted);
   font-size: 0.94rem;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .navLinks a:hover {
   color: var(--teal-dark);
-  background: #eef7f4;
+  background: var(--surface-soft);
 }
 
 .heroGrid {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+  grid-template-columns: minmax(0, 0.82fr) minmax(470px, 1.18fr);
   align-items: center;
-  gap: clamp(28px, 5vw, 72px);
+  gap: clamp(30px, 5vw, 76px);
   max-width: 1180px;
   min-height: calc(92vh - 92px);
   margin: 0 auto;
@@ -127,14 +133,14 @@ main {
 }
 
 .heroCopy {
-  max-width: 650px;
+  max-width: 610px;
 }
 
 .eyebrow {
   gap: 8px;
   color: var(--teal-dark);
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -147,17 +153,17 @@ p {
 }
 
 h1 {
-  max-width: 10ch;
+  max-width: 9ch;
   margin-bottom: 20px;
-  font-size: clamp(3rem, 8vw, 6.5rem);
-  line-height: 0.95;
+  font-size: clamp(3.25rem, 6vw, 5.6rem);
+  line-height: 0.92;
   letter-spacing: 0;
 }
 
 h2 {
   margin-bottom: 14px;
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  line-height: 1.02;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.04;
   letter-spacing: 0;
 }
 
@@ -168,7 +174,8 @@ h3 {
 
 .heroCopy p,
 .sectionHeader p,
-.devopsLayout p {
+.focusLayout p,
+.architectureSection p {
   color: var(--muted);
   font-size: 1.08rem;
   line-height: 1.7;
@@ -187,13 +194,13 @@ h3 {
   min-height: 48px;
   padding: 0 18px;
   border-radius: 8px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .button.primary {
   color: white;
   background: var(--teal);
-  box-shadow: 0 14px 34px rgb(14 143 135 / 24%);
+  box-shadow: 0 14px 34px rgb(15 143 134 / 24%);
 }
 
 .button.ghost {
@@ -202,54 +209,122 @@ h3 {
   background: white;
 }
 
-.heroVisual {
-  position: relative;
-  min-height: 460px;
-}
-
-.heroVisual img {
-  width: 100%;
-  height: min(58vw, 560px);
-  min-height: 420px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-}
-
-.floatingMetric {
-  position: absolute;
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  column-gap: 8px;
-  min-width: 122px;
-  padding: 12px;
-  border: 1px solid rgb(20 32 31 / 10%);
+.plannerPanel {
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid rgb(23 33 31 / 10%);
   border-radius: 8px;
   background: rgb(255 255 255 / 88%);
-  box-shadow: 0 12px 42px rgb(20 32 31 / 16%);
-  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
 }
 
-.floatingMetric strong {
-  font-size: 1.4rem;
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
-.floatingMetric span {
-  grid-column: 2;
-  color: var(--muted);
+.panelHeader h2 {
+  margin: 6px 0 0;
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+}
+
+.riskBadge {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 6px;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.metricTop {
-  top: 22px;
-  left: -22px;
+.riskBajo {
+  color: #12623d;
+  background: #dff6e9;
 }
 
-.metricBottom {
-  right: -18px;
-  bottom: 26px;
+.riskMedio {
+  color: #7d5705;
+  background: #fff0cb;
+}
+
+.riskAlto {
+  color: #9b3a23;
+  background: #ffe2da;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: white;
+  outline: none;
+}
+
+input,
+select {
+  padding: 0 12px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 94px;
+  padding: 12px;
+  line-height: 1.5;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgb(15 143 134 / 70%);
+  box-shadow: 0 0 0 4px rgb(15 143 134 / 12%);
+}
+
+.wideField {
+  margin-top: 14px;
+}
+
+.focusGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.chip {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: white;
+  font-weight: 900;
+}
+
+.chip.active {
+  color: white;
+  border-color: var(--navy);
+  background: var(--navy);
 }
 
 .statsBand {
@@ -257,29 +332,34 @@ h3 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   max-width: 1180px;
-  margin: -32px auto 0;
+  margin: -34px auto 0;
   padding: 0 clamp(18px, 4vw, 0px);
   background: var(--line);
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 18px 60px rgb(20 32 31 / 9%);
+  box-shadow: 0 18px 60px rgb(23 33 31 / 9%);
 }
 
 .statsBand div {
   display: grid;
-  gap: 4px;
-  min-height: 108px;
+  gap: 5px;
+  min-height: 118px;
   padding: 22px;
   background: white;
 }
 
+.statsBand svg {
+  color: var(--teal);
+}
+
 .statsBand strong {
   font-size: 2rem;
+  line-height: 1;
 }
 
 .statsBand span {
   color: var(--muted);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .section {
@@ -289,7 +369,7 @@ h3 {
 }
 
 .sectionHeader {
-  max-width: 720px;
+  max-width: 760px;
   margin-bottom: 30px;
 }
 
@@ -297,207 +377,162 @@ h3 {
   margin-bottom: 22px;
 }
 
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-
-.filter {
-  min-height: 42px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--muted);
-  background: white;
-  font-weight: 800;
-}
-
-.filter.active {
-  color: white;
-  border-color: var(--teal);
-  background: var(--teal);
-}
-
-.taskGrid,
-.qualityGrid {
+.routeGrid,
+.tracksGrid,
+.architectureGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
-.taskCard,
-.qualityCard {
-  min-height: 190px;
-  padding: 20px;
+.routeGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.routeCard,
+.trackCard,
+.apiCard {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: white;
 }
 
-.taskCard {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.routeCard {
+  min-height: 240px;
+  padding: 20px;
 }
 
-.taskTop {
-  display: flex;
+.cardTop {
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
-.status,
-.priority {
+.cardTop span,
+.trackTag,
+.apiCard span {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
   padding: 0 9px;
   border-radius: 6px;
+  color: var(--teal-dark);
+  background: var(--surface-soft);
   font-size: 0.78rem;
   font-weight: 900;
 }
 
-.statusTodo {
-  color: #885c00;
-  background: #fff0cb;
+.cardTop svg {
+  color: var(--green);
 }
 
-.statusReview {
-  color: #9b3a23;
-  background: #ffe2da;
-}
-
-.statusDone {
-  color: #12623d;
-  background: #dff6e9;
-}
-
-.priority {
-  color: #314240;
-  background: #edf1f0;
-}
-
-.taskCard p,
-.qualityCard p {
-  margin-bottom: 0;
+.routeCard ul {
+  display: grid;
+  gap: 9px;
+  margin: 16px 0 0;
+  padding-left: 18px;
   color: var(--muted);
   line-height: 1.55;
 }
 
-.qualitySection {
-  max-width: none;
-  margin-top: 86px;
-  padding: 86px clamp(18px, 4vw, 56px);
-  background: #14201f;
+.tracksSection {
+  padding-top: 70px;
+}
+
+.tracksGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trackCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  min-height: 250px;
+  padding: 20px;
+}
+
+.trackCard p,
+.apiCard p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.58;
+}
+
+.trackCard button {
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border-radius: 8px;
   color: white;
-}
-
-.qualitySection .sectionHeader,
-.qualityGrid {
-  max-width: 1180px;
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.qualitySection p {
-  color: #b9c9c5;
-}
-
-.qualityCard {
-  border-color: rgb(255 255 255 / 12%);
-  background: rgb(255 255 255 / 7%);
-}
-
-.qualityCard span {
-  display: inline-block;
-  margin-bottom: 26px;
-  color: var(--yellow);
+  background: var(--teal);
   font-weight: 900;
 }
 
-.devopsLayout {
+.focusSection {
+  max-width: none;
+  margin-top: 86px;
+  padding: 86px clamp(18px, 4vw, 56px);
+  color: white;
+  background: #17211f;
+}
+
+.focusLayout {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(360px, 1fr);
   gap: 42px;
   align-items: center;
+  max-width: 1180px;
+  margin: 0 auto;
 }
 
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 24px;
+.focusLayout p {
+  color: #bdcbc8;
 }
 
-.links a {
-  gap: 8px;
-  min-height: 42px;
-  padding: 0 12px;
-  border-radius: 8px;
-  color: var(--teal-dark);
-  background: var(--surface-soft);
-  font-weight: 800;
-}
-
-.pipeline {
+.topicList {
   display: grid;
   gap: 10px;
 }
 
-.pipelineStep {
-  display: grid;
-  grid-template-columns: 24px 1fr;
-  align-items: center;
+.topic {
+  justify-content: space-between;
   gap: 12px;
   min-height: 58px;
   padding: 0 16px;
-  border: 1px solid var(--line);
+  border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 8px;
-  color: var(--muted);
-  background: white;
+  color: #d9e5e2;
+  background: rgb(255 255 255 / 7%);
   text-align: left;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.pipelineStep.active {
+.topic.active {
   color: var(--ink);
-  border-color: rgb(14 143 135 / 35%);
-  background: #e8f7f4;
+  border-color: var(--yellow);
+  background: var(--yellow);
 }
 
-.pipelineStep.active svg {
-  color: var(--green);
-}
-
-.changeSection {
+.architectureSection {
   padding-bottom: 86px;
 }
 
-.changeList {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.architectureGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.changeList div {
-  gap: 10px;
-  min-height: 64px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: white;
-  color: var(--muted);
-  font-weight: 800;
+.apiCard {
+  min-height: 210px;
+  padding: 20px;
 }
 
-.changeList svg {
-  flex: 0 0 auto;
-  color: var(--teal);
+.apiCard span {
+  margin-bottom: 28px;
+  color: #8a4a16;
+  background: #fff0cb;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .hero {
     min-height: auto;
   }
@@ -513,58 +548,42 @@ h3 {
   }
 
   .heroGrid,
-  .devopsLayout {
+  .focusLayout {
     grid-template-columns: 1fr;
   }
 
-  .heroVisual {
-    min-height: 340px;
-  }
-
-  .heroVisual img {
-    height: 420px;
-    min-height: 340px;
-  }
-
-  .metricTop {
-    left: 12px;
-  }
-
-  .metricBottom {
-    right: 12px;
-  }
-
   .statsBand,
-  .taskGrid,
-  .qualityGrid,
-  .changeList {
+  .routeGrid,
+  .tracksGrid,
+  .architectureGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 640px) {
   .hero {
-    padding-bottom: 24px;
+    padding-bottom: 46px;
   }
 
   .heroGrid {
-    gap: 20px;
-    padding-top: 28px;
+    gap: 28px;
+    padding-top: 30px;
   }
 
   .navLinks a {
     padding: 10px 8px;
-    font-size: 0.86rem;
+    font-size: 0.84rem;
   }
 
   h1 {
-    max-width: 9ch;
-    font-size: 3.1rem;
+    max-width: 8ch;
+    font-size: 3.35rem;
   }
 
   .heroCopy p,
   .sectionHeader p,
-  .devopsLayout p {
+  .focusLayout p,
+  .architectureSection p {
     font-size: 1rem;
     line-height: 1.6;
   }
@@ -574,25 +593,22 @@ h3 {
     width: 100%;
   }
 
-  .heroVisual {
-    min-height: 300px;
+  .panelHeader {
+    flex-direction: column;
   }
 
-  .heroVisual img {
-    height: 300px;
-    min-height: 300px;
-  }
-
+  .formGrid,
   .statsBand,
-  .taskGrid,
-  .qualityGrid,
-  .changeList {
+  .routeGrid,
+  .tracksGrid,
+  .architectureGrid {
     grid-template-columns: 1fr;
   }
 
   .statsBand div,
-  .taskCard,
-  .qualityCard {
+  .routeCard,
+  .trackCard,
+  .apiCard {
     min-height: auto;
   }
 }

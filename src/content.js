@@ -1,77 +1,51 @@
 export const appInfo = {
-  name: 'AgileFlow Devs0ps',
-  tagline: 'Sistema ligero para controlar entregas agiles con evidencia DevOps.',
+  name: 'StudyFlow',
+  tagline: 'Planificador de estudio personalizado para estudiantes.',
   summary:
-    'Una landing funcional con tablero de sprint, control de calidad y flujo de despliegue pensado para explicar cambios en vivo.',
-  repositoryUrl: 'https://github.com/JorkLucas03/agileflow-devops',
-  cloudRunUrl: 'https://agileflow-devops-slttpg4z3a-uc.a.run.app',
+    'Organiza materias, fechas de examen, horas disponibles y temas pendientes en una ruta de estudio clara y defendible.',
 };
 
-export const qualityAttributes = [
+export const defaultTopics = ['Limites', 'Derivadas', 'Integrales', 'Aplicaciones'];
+
+export const difficultyOptions = ['Baja', 'Media', 'Alta'];
+
+export const focusOptions = ['Examen parcial', 'Final acumulativo', 'Recuperacion'];
+
+export const subjectTracks = [
   {
-    title: 'Modificabilidad',
-    description: 'Textos, metricas y tarjetas viven en un solo archivo de contenido.',
-    score: 'Alta',
+    subject: 'Matematicas',
+    difficulty: 'Media',
+    description: 'Ideal para organizar teoria, practica y simulacros antes de un examen numerico.',
+    topics: ['Limites', 'Derivadas', 'Integrales', 'Aplicaciones'],
   },
   {
-    title: 'Usabilidad',
-    description: 'Interfaz clara, responsive y con acciones visibles para una demo rapida.',
-    score: 'Alta',
+    subject: 'Programacion',
+    difficulty: 'Alta',
+    description: 'Divide conceptos, ejercicios y mini retos para preparar pruebas tecnicas o proyectos.',
+    topics: ['Funciones', 'Arrays', 'Objetos', 'APIs', 'Errores comunes'],
   },
   {
-    title: 'Disponibilidad',
-    description: 'Preparado para Cloud Run con contenedor reproducible y puerto 8080.',
-    score: 'Cloud',
-  },
-  {
-    title: 'Mantenibilidad',
-    description: 'Componentes separados, nombres simples y README con pasos de despliegue.',
-    score: 'Simple',
+    subject: 'Base de datos',
+    difficulty: 'Media',
+    description: 'Ordena teoria relacional, consultas SQL, normalizacion y ejercicios practicos.',
+    topics: ['Modelo relacional', 'SQL SELECT', 'Joins', 'Normalizacion'],
   },
 ];
 
-export const sprintItems = [
+export const apiPreview = [
   {
-    id: 1,
-    title: 'Landing informativa',
-    owner: 'Frontend',
-    status: 'done',
-    priority: 'Alta',
+    label: 'Google Cloud Run',
+    title: 'Frontend contenedorizado',
+    description: 'La interfaz de StudyFlow mantiene Docker, Nginx y puerto 8080 para desplegarse como servicio web.',
   },
   {
-    id: 2,
-    title: 'Dockerfile para Cloud Run',
-    owner: 'DevOps',
-    status: 'done',
-    priority: 'Alta',
+    label: 'AWS + FastAPI',
+    title: 'Backend de planes',
+    description: 'El proximo endpoint recibira materia, temas y tiempo disponible para devolver un plan JSON.',
   },
   {
-    id: 3,
-    title: 'Workflow GitHub Actions',
-    owner: 'CI/CD',
-    status: 'review',
-    priority: 'Media',
+    label: 'REST',
+    title: 'Contrato simple',
+    description: 'La pantalla queda lista para consumir POST /api/study-plan cuando el backend este publicado.',
   },
-  {
-    id: 4,
-    title: 'Evidencia de despliegue',
-    owner: 'Equipo',
-    status: 'todo',
-    priority: 'Alta',
-  },
-];
-
-export const pipelineSteps = [
-  'Push hacia GitHub',
-  'Instalar dependencias',
-  'Compilar frontend',
-  'Construir imagen',
-  'Desplegar en Cloud Run',
-];
-
-export const demoChanges = [
-  'Cambiar nombre del sistema en src/content.js',
-  'Agregar una tarea al arreglo sprintItems',
-  'Actualizar el enlace de Cloud Run despues del despliegue',
-  'Modificar colores principales en src/styles.css',
 ];

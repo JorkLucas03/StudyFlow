@@ -1,15 +1,16 @@
-# AgileFlow DevOps
+# StudyFlow
 
-Frontend demostrable para la practica de DevOps con GitHub Actions y Google Cloud Run.
+Frontend para un planificador de estudio personalizado. La app permite ingresar materia, fecha de examen, horas disponibles, dificultad y temas pendientes para generar una ruta inicial de estudio desde la interfaz.
 
 ## Que incluye
 
-- Landing page llamativa y responsive.
-- Tablero de sprint con filtros interactivos.
-- Seccion de atributos de calidad.
-- Flujo CI/CD explicable para la defensa.
+- Interfaz responsive construida con React y Vite.
+- Formulario funcional para crear un plan de estudio.
+- Calculo local de dias disponibles, horas estimadas, temas activos y cobertura.
+- Rutas de estudio generadas a partir de los temas ingresados.
+- Materias base para cambiar rapidamente el enfoque de la demo.
+- Seccion preparada para explicar la arquitectura: frontend en Google Cloud Run y backend FastAPI en AWS.
 - Dockerfile listo para Cloud Run en el puerto `8080`.
-- Workflow de GitHub Actions para desplegar automaticamente.
 
 ## Ejecutar localmente
 
@@ -18,7 +19,7 @@ npm install
 npm run dev
 ```
 
-La app quedara disponible normalmente en `http://localhost:5173`.
+La app queda disponible normalmente en `http://localhost:5173`.
 
 ## Compilar
 
@@ -26,9 +27,16 @@ La app quedara disponible normalmente en `http://localhost:5173`.
 npm run build
 ```
 
-## Cambios faciles para la defensa
+## Verificar
 
-La mayoria del contenido editable esta en:
+```bash
+npm run lint
+npm run test:e2e
+```
+
+## Contenido editable
+
+La mayor parte del contenido esta en:
 
 ```text
 src/content.js
@@ -37,81 +45,54 @@ src/content.js
 Puedes cambiar:
 
 - Nombre del sistema: `appInfo.name`
-- Link del repositorio: `appInfo.repositoryUrl`
-- Link de Cloud Run: `appInfo.cloudRunUrl`
-- Tareas del tablero: `sprintItems`
-- Atributos de calidad: `qualityAttributes`
-- Pasos del pipeline: `pipelineSteps`
+- Temas iniciales: `defaultTopics`
+- Opciones de dificultad: `difficultyOptions`
+- Objetivos de estudio: `focusOptions`
+- Materias base: `subjectTracks`
+- Bloques de arquitectura: `apiPreview`
 
-Colores y apariencia principal:
+La apariencia principal esta en:
 
 ```text
 src/styles.css
 ```
 
-## Despliegue en Google Cloud Run
-
-### 1. Crear proyecto y habilitar APIs
-
-En Google Cloud habilita:
-
-- Cloud Run
-- Cloud Build
-- IAM Credentials API
-- Artifact Registry
-
-### 2. Crear cuenta de servicio
-
-La cuenta usada por GitHub Actions necesita permisos para desplegar. Para una practica academica, una configuracion comun es:
-
-- `Cloud Run Admin`
-- `Cloud Build Editor`
-- `Service Account User`
-- `Artifact Registry Writer`
-
-### 3. Configurar autenticacion con GitHub
-
-Configura Workload Identity Federation entre GitHub y Google Cloud. Luego crea estos secretos en GitHub:
+## Arquitectura planteada
 
 ```text
-GCP_PROJECT_ID
-GCP_WORKLOAD_IDENTITY_PROVIDER
-GCP_SERVICE_ACCOUNT
+Usuario
+  |
+  v
+Frontend StudyFlow en Google Cloud Run
+  |
+  | POST /api/study-plan
+  v
+Backend FastAPI en AWS
 ```
 
-### 4. Subir a GitHub
+Por ahora el plan se genera en el frontend para dejar lista la experiencia visual. En la siguiente fase, el formulario puede enviar los mismos datos a un backend FastAPI desplegado en AWS.
+
+## Despliegue en Google Cloud Run
+
+El contenedor sirve la app con Nginx en el puerto `8080`, compatible con Cloud Run.
 
 ```bash
-git init
-git add .
-git commit -m "Add AgileFlow DevOps frontend"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/agileflow-devops.git
-git push -u origin main
+docker build -t studyflow-frontend .
+docker run -p 8080:8080 studyflow-frontend
 ```
-
-Al hacer push a `main`, GitHub Actions ejecutara `.github/workflows/deploy-cloud-run.yml`.
-
-## Evidencia que debes mostrar
-
-- Repositorio en GitHub con el codigo.
-- Ejecucion exitosa de GitHub Actions.
-- URL publica de Cloud Run abierta en el navegador.
-- Funcionamiento del tablero y filtros.
-- Un cambio en vivo en `src/content.js`, por ejemplo agregar una tarea o cambiar una metrica.
 
 ## Estructura
 
 ```text
 .
-├── .github/workflows/deploy-cloud-run.yml
 ├── Dockerfile
 ├── nginx.conf
 ├── src/
 │   ├── App.jsx
 │   ├── content.js
 │   ├── main.jsx
-│   ├── styles.css
-│   └── assets/hero-devops.png
+│   └── styles.css
+├── tests/
+│   └── studyflow.spec.js
 └── README.md
 ```
