@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 test('muestra StudyFlow y actualiza el plan de estudio', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem('studyflow-theme');
+  });
+
   const requests = [];
   page.on('request', (request) => {
     if (request.url().includes('/api/study-plans')) {
@@ -13,7 +17,7 @@ test('muestra StudyFlow y actualiza el plan de estudio', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'StudyFlow' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Crear plan' })).toBeVisible();
   await page.getByRole('button', { name: 'Noche' }).click();
-  await expect(page.getByRole('button', { name: 'Manana' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Dia' })).toBeVisible();
 
   await page.getByLabel('Materia').fill('Programacion');
   await page.getByLabel('Temas pendientes').fill('Funciones, Arrays, APIs');

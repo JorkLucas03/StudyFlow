@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -24,6 +24,12 @@ import {
 } from './content';
 import { createStudyPlan, fetchContent, updateStudyPlan } from './api';
 
+const difficultyWeight = {
+  Baja: 0.85,
+  Media: 1,
+  Alta: 1.25,
+};
+
 function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -42,6 +48,61 @@ const fallbackPlan = {
   topics: [],
   totalHours: 0,
 };
+
+function splitTopics(value) {
+  return value
+    .split(',')
+    .map((topic) => topic.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function getDaysUntil(dateValue) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exam = new Date(`${dateValue}T00:00:00`);
+  const diff = exam.getTime() - today.getTime();
+  return Math.max(1, Math.ceil(diff / 86400000));
+}
+
+function formatHours(value) {
+  return `${Number.isInteger(value) ? value : value.toFixed(1)} h`;
+}
+
+function buildLocalStudyPlan(form) {
+  const topics = splitTopics(form.topics);
+  const daysUntilExam = getDaysUntil(form.examDate);
+  const hoursPerDay = Number(form.hoursPerDay);
+  const totalHours = daysUntilExam * hoursPerDay;
+  const requiredHours = Math.max(6, topics.length * 3.5 * difficultyWeight[form.difficulty]);
+  const coverage = Math.min(100, Math.round((totalHours / requiredHours) * 100));
+  const pace = coverage >= 90 ? 'Comodo' : coverage >= 62 ? 'Constante' : 'Intenso';
+  const sessions = Math.min(5, Math.max(3, topics.length));
+
+  const dailyPlan = Array.from({ length: sessions }, (_, index) => {
+    const dayNumber = index + 1;
+    const topic = topics[index % topics.length] || form.subject;
+    const isFinalSession = dayNumber === sessions;
+
+    return {
+      label: isFinalSession ? 'Cierre' : `Sesion ${dayNumber}`,
+      title: isFinalSession ? 'Simulacro final' : topic,
+      time: isFinalSession ? formatHours(hoursPerDay) : formatHours(Math.max(1, hoursPerDay - 0.5)),
+      tasks: isFinalSession
+        ? ['Resolver un simulacro', 'Corregir errores', 'Preparar hoja de formulas o resumen']
+        : ['Repasar conceptos clave', 'Resolver ejercicios', 'Anotar dudas para la siguiente sesion'],
+    };
+  });
+
+  return {
+    coverage,
+    dailyPlan,
+    daysUntilExam,
+    pace,
+    topics,
+    totalHours,
+  };
+}
 
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('studyflow-theme') || 'morning');
@@ -64,6 +125,7 @@ function App() {
   const [plan, setPlan] = useState(fallbackPlan);
   const [planId, setPlanId] = useState(null);
   const [apiStatus, setApiStatus] = useState('idle');
+  const localPlan = useMemo(() => buildLocalStudyPlan(form), [form]);
 
   useEffect(() => {
     let isMounted = true;
@@ -103,6 +165,8 @@ function App() {
         setApiStatus('ready');
       } catch (error) {
         if (error.name !== 'AbortError') {
+          setPlan(localPlan);
+          setPlanId(null);
           setApiStatus('error');
         }
       }
@@ -112,7 +176,7 @@ function App() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [form, planId]);
+  }, [form, localPlan, planId]);
 
   const themeLabel = theme === 'morning' ? 'Noche' : 'Dia';
 
