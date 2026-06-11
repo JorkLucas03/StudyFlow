@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -10,9 +10,12 @@ import {
   ListChecks,
   Moon,
   NotebookPen,
+  Plus,
+  Save,
   Sparkles,
   Sun,
   Target,
+  Trash2,
 } from 'lucide-react';
 import {
   appInfo,
@@ -22,12 +25,32 @@ import {
   focusOptions,
   studyMethods,
 } from './content';
-import { createStudyPlan, fetchContent, updateStudyPlan } from './api';
+import { createStudyPlan, fetchContent } from './api';
 
 const difficultyWeight = {
   Baja: 0.85,
   Media: 1,
   Alta: 1.25,
+};
+
+const STORAGE_KEYS = {
+  plans: 'studyflow-plans',
+  activePlanId: 'studyflow-active-plan-id',
+  theme: 'studyflow-theme',
+};
+
+const MIN_HOURS_PER_DAY = 1;
+const MAX_HOURS_PER_DAY = 8;
+const MAX_SUBJECT_LENGTH = 120;
+const MAX_TOPICS_LENGTH = 600;
+
+const fallbackPlan = {
+  coverage: 0,
+  dailyPlan: [],
+  daysUntilExam: 0,
+  pace: 'Sin plan',
+  topics: [],
+  totalHours: 0,
 };
 
 function addDays(date, days) {
@@ -39,20 +62,6 @@ function addDays(date, days) {
 function formatInputDate(date) {
   return date.toISOString().slice(0, 10);
 }
-
-const fallbackPlan = {
-  coverage: 0,
-  dailyPlan: [],
-  daysUntilExam: 0,
-  pace: 'Cargando',
-  topics: [],
-  totalHours: 0,
-};
-
-const MIN_HOURS_PER_DAY = 1;
-const MAX_HOURS_PER_DAY = 8;
-const MAX_SUBJECT_LENGTH = 120;
-const MAX_TOPICS_LENGTH = 600;
 
 function splitTopics(value) {
   return value
@@ -66,20 +75,13 @@ function getDaysUntil(dateValue) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const exam = new Date(`${dateValue}T00:00:00`);
-  if (Number.isNaN(exam.getTime())) {
-    return 1;
-  }
-  const diff = exam.getTime() - today.getTime();
-  return Math.max(1, Math.ceil(diff / 86400000));
+  if (Number.isNaN(exam.getTime())) return 1;
+  return Math.max(1, Math.ceil((exam.getTime() - today.getTime()) / 86400000));
 }
 
 function getSafeHoursPerDay(value) {
   const hours = Number(value);
-
-  if (!Number.isFinite(hours)) {
-    return MIN_HOURS_PER_DAY;
-  }
-
+  if (!Number.isFinite(hours)) return MIN_HOURS_PER_DAY;
   return Math.min(MAX_HOURS_PER_DAY, Math.max(MIN_HOURS_PER_DAY, hours));
 }
 
@@ -168,8 +170,50 @@ function validateStudyForm(form, content) {
   };
 }
 
+function readJsonStorage(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function makeLocalId() {
+  return `plan-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function makeTaskKey(sessionIndex, taskIndex) {
+  return `${sessionIndex}:${taskIndex}`;
+}
+
+function countTasks(plan) {
+  return plan.dailyPlan.reduce((total, session) => total + session.tasks.length, 0);
+}
+
+function buildStoredPlan(plan, form, source) {
+  const now = new Date().toISOString();
+  return {
+    ...plan,
+    localId: makeLocalId(),
+    backendId: plan.id ?? null,
+    source,
+    subject: form.subject.trim(),
+    examDate: form.examDate,
+    hoursPerDay: Number(form.hoursPerDay),
+    difficulty: form.difficulty,
+    focus: form.focus,
+    topicsInput: form.topics.trim(),
+    completedTasks: {},
+    createdAt: plan.createdAt || now,
+    savedAt: now,
+  };
+}
+
 function App() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('studyflow-theme') || 'morning');
+  const agendaRef = useRef(null);
+  const plannerRef = useRef(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem(STORAGE_KEYS.theme) || 'morning');
   const [form, setForm] = useState(() => ({
     subject: 'Matematicas',
     examDate: formatInputDate(addDays(new Date(), 14)),
@@ -186,13 +230,22 @@ function App() {
     focusOptions,
     studyMethods,
   });
-  const [plan, setPlan] = useState(fallbackPlan);
-  const [planId, setPlanId] = useState(null);
+  const [savedPlans, setSavedPlans] = useState(() => readJsonStorage(STORAGE_KEYS.plans, []));
+  const [activePlanId, setActivePlanId] = useState(() => localStorage.getItem(STORAGE_KEYS.activePlanId));
   const [apiStatus, setApiStatus] = useState('idle');
   const [apiMessage, setApiMessage] = useState('');
+
   const validation = useMemo(() => validateStudyForm(form, content), [form, content]);
   const formErrors = validation.errors;
   const localPlan = useMemo(() => buildLocalStudyPlan(form), [form]);
+  const activePlan = savedPlans.find((item) => item.localId === activePlanId) || null;
+  const displayedPlan = activePlan || localPlan || fallbackPlan;
+  const displayedSubject = activePlan?.subject || form.subject || 'Tu materia';
+  const taskTotal = countTasks(displayedPlan);
+  const completedTotal = activePlan ? Object.values(activePlan.completedTasks || {}).filter(Boolean).length : 0;
+  const progressPercent = taskTotal ? Math.round((completedTotal / taskTotal) * 100) : 0;
+  const themeLabel = theme === 'morning' ? 'Noche' : 'Dia';
+  const activePlanSource = activePlan?.source === 'api' ? 'API' : activePlan ? 'Local' : 'Vista previa';
 
   useEffect(() => {
     let isMounted = true;
@@ -205,8 +258,7 @@ function App() {
       })
       .catch(() => {
         if (isMounted) {
-          setApiStatus('error');
-          setApiMessage('No se pudo cargar el contenido desde la API. Se usara la informacion local.');
+          setApiMessage('No se pudo cargar contenido desde la API. Se usara la informacion local.');
         }
       });
 
@@ -216,63 +268,139 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!validation.isValid) {
-      return undefined;
+    localStorage.setItem(STORAGE_KEYS.plans, JSON.stringify(savedPlans));
+  }, [savedPlans]);
+
+  useEffect(() => {
+    if (activePlanId) {
+      localStorage.setItem(STORAGE_KEYS.activePlanId, activePlanId);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.activePlanId);
     }
+  }, [activePlanId]);
 
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(async () => {
-      setApiStatus('saving');
-      setApiMessage('');
-      const payload = {
-        ...form,
-        subject: form.subject.trim(),
-        hoursPerDay: Number(form.hoursPerDay),
-        topics: form.topics.trim(),
-      };
-
-      try {
-        const nextPlan = planId
-          ? await updateStudyPlan(planId, payload, { signal: controller.signal })
-          : await createStudyPlan(payload, { signal: controller.signal });
-        setPlan(nextPlan);
-        setPlanId(nextPlan.id);
-        setApiStatus('ready');
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          setPlan(localPlan);
-          setPlanId(null);
-          setApiStatus(error.status === 422 ? 'validation' : 'error');
-          setApiMessage(
-            error.message || 'No se pudo conectar con la API. Revisa que FastAPI este activo.',
-          );
-        }
-      }
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [form, localPlan, planId, validation]);
-
-  const themeLabel = theme === 'morning' ? 'Noche' : 'Dia';
-  const displayedApiStatus = validation.isValid ? apiStatus : 'validation';
-  const displayedApiMessage = validation.isValid ? apiMessage : validation.message;
-  const displayedPlan = validation.isValid ? plan : localPlan;
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(STORAGE_KEYS.theme, theme);
+  }, [theme]);
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function scrollToPlanner() {
+    plannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function scrollToAgenda() {
+    if (activePlan) {
+      agendaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      setApiMessage('Primero crea un plan para abrir la agenda guardada.');
+      scrollToPlanner();
+    }
+  }
+
+  function openPlan(plan) {
+    setActivePlanId(plan.localId);
+    setForm({
+      subject: plan.subject,
+      examDate: plan.examDate,
+      hoursPerDay: plan.hoursPerDay,
+      difficulty: plan.difficulty,
+      focus: plan.focus,
+      topics: plan.topicsInput,
+    });
+    setApiMessage(`Plan de ${plan.subject} abierto desde Mis planes.`);
+    window.setTimeout(() => {
+      agendaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }
+
+  function removePlan(localId) {
+    setSavedPlans((current) => current.filter((item) => item.localId !== localId));
+    if (activePlanId === localId) {
+      setActivePlanId(null);
+    }
+  }
+
+  function resetPlanForm() {
+    setActivePlanId(null);
+    setForm({
+      subject: '',
+      examDate: formatInputDate(addDays(new Date(), 14)),
+      hoursPerDay: 2,
+      difficulty: content.difficultyOptions[1] || 'Media',
+      focus: content.focusOptions[0] || 'Examen parcial',
+      topics: '',
+    });
+    setApiMessage('Formulario listo para crear un nuevo plan.');
+    scrollToPlanner();
+  }
+
+  async function handleCreatePlan() {
+    if (!validation.isValid) {
+      setApiStatus('validation');
+      setApiMessage(validation.message);
+      scrollToPlanner();
+      return;
+    }
+
+    setApiStatus('saving');
+    setApiMessage('Generando plan de estudio...');
+
+    const payload = {
+      ...form,
+      subject: form.subject.trim(),
+      hoursPerDay: Number(form.hoursPerDay),
+      topics: form.topics.trim(),
+    };
+
+    try {
+      const apiPlan = await createStudyPlan(payload);
+      const storedPlan = buildStoredPlan(apiPlan, form, 'api');
+      setSavedPlans((current) => [storedPlan, ...current].slice(0, 8));
+      setActivePlanId(storedPlan.localId);
+      setApiStatus('ready');
+      setApiMessage('Plan creado con FastAPI y guardado en este navegador.');
+      window.setTimeout(scrollToAgenda, 120);
+    } catch (error) {
+      const storedPlan = buildStoredPlan(localPlan, form, 'local');
+      setSavedPlans((current) => [storedPlan, ...current].slice(0, 8));
+      setActivePlanId(storedPlan.localId);
+      setApiStatus(error.status === 422 ? 'validation' : 'error');
+      setApiMessage(
+        error.status === 422
+          ? error.message
+          : 'No se pudo conectar con la API. Se creo una copia local para continuar la demo.',
+      );
+      window.setTimeout(scrollToAgenda, 120);
+    }
   }
 
   function toggleTheme() {
     setTheme((current) => (current === 'morning' ? 'night' : 'morning'));
   }
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('studyflow-theme', theme);
-  }, [theme]);
+  function toggleTask(sessionIndex, taskIndex) {
+    if (!activePlan) return;
+
+    const taskKey = makeTaskKey(sessionIndex, taskIndex);
+    setSavedPlans((current) =>
+      current.map((plan) =>
+        plan.localId === activePlan.localId
+          ? {
+              ...plan,
+              completedTasks: {
+                ...plan.completedTasks,
+                [taskKey]: !plan.completedTasks?.[taskKey],
+              },
+              savedAt: new Date().toISOString(),
+            }
+          : plan,
+      ),
+    );
+  }
 
   return (
     <main>
@@ -287,7 +415,9 @@ function App() {
           <div className="navControls">
             <div className="navLinks">
               <a href="#planificador">Planificador</a>
-              <a href="#agenda">Agenda</a>
+              <button onClick={scrollToAgenda} type="button">
+                Agenda
+              </button>
               <a href="#checklist">Checklist</a>
             </div>
             <button className="themeToggle" onClick={toggleTheme} type="button">
@@ -306,18 +436,18 @@ function App() {
             <h1>{content.appInfo.name}</h1>
             <p>{content.appInfo.summary}</p>
             <div className="heroActions">
-              <a className="button primary" href="#planificador">
-                Crear plan
+              <button className="button primary" onClick={handleCreatePlan} type="button">
+                {apiStatus === 'saving' ? 'Generando...' : 'Crear plan'}
                 <ArrowRight size={18} aria-hidden="true" />
-              </a>
-              <a className="button ghost" href="#agenda">
+              </button>
+              <button className="button ghost" onClick={scrollToAgenda} type="button">
                 Ver agenda
                 <CalendarDays size={18} aria-hidden="true" />
-              </a>
+              </button>
             </div>
           </div>
 
-          <section className="plannerPanel" id="planificador" aria-label="Planificador StudyFlow">
+          <section className="plannerPanel" id="planificador" ref={plannerRef} aria-label="Planificador StudyFlow">
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">
@@ -328,14 +458,9 @@ function App() {
               </div>
               <span className="paceBadge">{displayedPlan.pace}</span>
             </div>
-            {displayedApiMessage && (
-              <p
-                className={
-                  displayedApiStatus === 'validation' ? 'apiMessage validation' : 'apiMessage'
-                }
-                role="status"
-              >
-                {displayedApiMessage}
+            {apiMessage && (
+              <p className={apiStatus === 'validation' ? 'apiMessage validation' : 'apiMessage'} role="status">
+                {apiMessage}
               </p>
             )}
 
@@ -449,27 +574,79 @@ function App() {
 
             <div className="plannerFooter">
               <div>
-                <span>Cobertura estimada</span>
+                <span>{activePlan ? `Guardado: ${activePlanSource}` : 'Vista previa de cobertura'}</span>
                 <strong>{displayedPlan.coverage}%</strong>
               </div>
               <div className="coverageTrack" aria-hidden="true">
                 <span style={{ width: `${displayedPlan.coverage}%` }} />
               </div>
             </div>
+
+            <div className="plannerActions">
+              <button className="button primary" onClick={handleCreatePlan} type="button">
+                {apiStatus === 'saving' ? 'Generando...' : 'Crear plan'}
+                <Save size={18} aria-hidden="true" />
+              </button>
+              <button className="button ghost" onClick={resetPlanForm} type="button">
+                Nuevo plan
+                <Plus size={18} aria-hidden="true" />
+              </button>
+            </div>
           </section>
         </div>
       </section>
 
-      <section className="section agendaSection" id="agenda">
+      <section className="section savedPlansSection" aria-label="Mis planes guardados">
+        <div className="sectionHeader compact">
+          <span className="eyebrow">
+            <Save size={16} aria-hidden="true" />
+            Mis planes
+          </span>
+          <h2>Planes guardados en este navegador</h2>
+          <p>Recarga la pagina y estos planes seguiran aqui para que el profesor pueda verificar el guardado.</p>
+        </div>
+
+        {savedPlans.length === 0 ? (
+          <div className="emptyPlans">
+            <p>Crea tu primer plan para verlo guardado aqui.</p>
+          </div>
+        ) : (
+          <div className="savedPlansGrid">
+            {savedPlans.map((item) => (
+              <article className={item.localId === activePlanId ? 'savedPlan active' : 'savedPlan'} key={item.localId}>
+                <div>
+                  <span>{item.source === 'api' ? 'API' : 'Local'}</span>
+                  <h3>{item.subject}</h3>
+                  <p>
+                    {item.pace} · {item.coverage}% · {new Date(item.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="savedPlanActions">
+                  <button onClick={() => openPlan(item)} type="button">
+                    Abrir
+                  </button>
+                  <button aria-label={`Eliminar ${item.subject}`} onClick={() => removePlan(item.localId)} type="button">
+                    <Trash2 size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="section agendaSection" id="agenda" ref={agendaRef}>
         <div className="agendaIntro">
           <div>
             <span className="eyebrow">
               <NotebookPen size={16} aria-hidden="true" />
               Agenda de estudio
             </span>
-            <h2>Tu ruta para {form.subject}</h2>
+            <h2>{activePlan ? `Tu ruta para ${displayedSubject}` : 'Crea un plan para activar tu agenda'}</h2>
             <p>
-              Divide tus temas en sesiones cortas, con practica y cierre antes del examen.
+              {activePlan
+                ? 'Marca cada tarea completada para ver tu avance real antes del examen.'
+                : 'La agenda se guardara y quedara lista cuando presiones Crear plan.'}
             </p>
           </div>
 
@@ -486,27 +663,57 @@ function App() {
             </div>
             <div>
               <Target size={20} aria-hidden="true" />
-              <strong>{displayedPlan.coverage}%</strong>
-              <span>Cobertura</span>
+              <strong>{activePlan ? `${completedTotal}/${taskTotal}` : `${displayedPlan.coverage}%`}</strong>
+              <span>{activePlan ? 'Tareas' : 'Cobertura'}</span>
             </div>
           </div>
         </div>
 
+        {activePlan && (
+          <div className="progressPanel" aria-label="Progreso del checklist">
+            <div>
+              <strong>{completedTotal} de {taskTotal} tareas completadas</strong>
+              <span>{progressPercent}%</span>
+            </div>
+            <div className="coverageTrack" aria-hidden="true">
+              <span style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        )}
+
         <div className="routeGrid">
-          {displayedPlan.dailyPlan.map((item) => (
-            <article className="routeCard" key={`${item.label}-${item.title}`}>
-              <div className="cardTop">
-                <span>{item.label}</span>
-                <small>{item.time}</small>
-              </div>
-              <h3>{item.title}</h3>
-              <ul>
-                {item.tasks.map((task) => (
-                  <li key={task}>{task}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
+          {displayedPlan.dailyPlan.map((item, sessionIndex) => {
+            const sessionTaskKeys = item.tasks.map((_, taskIndex) => makeTaskKey(sessionIndex, taskIndex));
+            const completedSession = activePlan && sessionTaskKeys.every((taskKey) => activePlan.completedTasks?.[taskKey]);
+
+            return (
+              <article className={completedSession ? 'routeCard completed' : 'routeCard'} key={`${item.label}-${item.title}`}>
+                <div className="cardTop">
+                  <span>{item.label}</span>
+                  <small>{item.time}</small>
+                </div>
+                <h3>{item.title}</h3>
+                <div className="taskList">
+                  {item.tasks.map((task, taskIndex) => {
+                    const taskKey = makeTaskKey(sessionIndex, taskIndex);
+                    const checked = Boolean(activePlan?.completedTasks?.[taskKey]);
+
+                    return (
+                      <label className={checked ? 'taskItem checked' : 'taskItem'} key={task}>
+                        <input
+                          checked={checked}
+                          disabled={!activePlan}
+                          onChange={() => toggleTask(sessionIndex, taskIndex)}
+                          type="checkbox"
+                        />
+                        <span>{task}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -518,7 +725,7 @@ function App() {
           </span>
           <h2>Checklist para llegar con calma</h2>
           <p>
-            Usa esta lista para saber si ya tienes teoria, practica y simulacro cubiertos.
+            Usa esta lista como guia general y marca las tareas concretas en la agenda de tu plan.
           </p>
         </div>
 

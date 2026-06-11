@@ -165,7 +165,18 @@ main {
   font-weight: 800;
 }
 
-.navLinks a:hover {
+.navLinks button {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.navLinks a:hover,
+.navLinks button:hover {
   color: var(--teal-dark);
   background: var(--soft);
 }
@@ -489,6 +500,13 @@ textarea:focus {
   color: var(--ink);
 }
 
+.plannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 .coverageTrack {
   position: relative;
   height: 10px;
@@ -509,6 +527,102 @@ textarea:focus {
   max-width: 1180px;
   margin: 0 auto;
   padding: 86px clamp(18px, 4vw, 0px) 0;
+}
+
+.savedPlansSection {
+  padding-top: 74px;
+}
+
+.emptyPlans {
+  padding: 22px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  font-weight: 800;
+}
+
+.emptyPlans p {
+  margin-bottom: 0;
+}
+
+.savedPlansGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.savedPlan {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 142px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.savedPlan.active {
+  border-color: rgb(15 143 134 / 60%);
+  box-shadow: 0 16px 36px rgb(15 143 134 / 12%);
+}
+
+.savedPlan:hover {
+  transform: translateY(-3px);
+  border-color: rgb(15 143 134 / 42%);
+}
+
+.savedPlan span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--teal-dark);
+  background: var(--soft);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.savedPlan h3 {
+  margin-top: 14px;
+}
+
+.savedPlan p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.savedPlanActions {
+  display: grid;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.savedPlanActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface);
+  font-weight: 900;
+}
+
+.savedPlanActions button:hover {
+  color: white;
+  border-color: var(--teal);
+  background: var(--teal);
 }
 
 .agendaSection {
@@ -580,6 +694,32 @@ textarea:focus {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.progressPanel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.progressPanel div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.progressPanel strong {
+  color: var(--ink);
+}
+
+.progressPanel span {
+  color: var(--teal-dark);
+  font-weight: 900;
+}
+
 .routeCard,
 .checkCard,
 .methodCard {
@@ -596,6 +736,13 @@ textarea:focus {
   min-height: 260px;
   padding: 18px;
   animation: fadeUp 520ms ease both;
+}
+
+.routeCard.completed {
+  border-color: rgb(45 155 108 / 55%);
+  background:
+    linear-gradient(180deg, rgb(45 155 108 / 10%), transparent 44%),
+    var(--surface);
 }
 
 .routeCard:nth-child(2) {
@@ -653,6 +800,49 @@ textarea:focus {
   padding-left: 18px;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.taskList {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.taskItem {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: start;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.taskItem input {
+  width: 18px;
+  min-height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+
+.taskItem input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.taskItem span {
+  transition:
+    color 180ms ease,
+    text-decoration-color 180ms ease,
+    transform 180ms ease;
+}
+
+.taskItem.checked span {
+  color: var(--green);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgb(45 155 108 / 55%);
 }
 
 .checklistSection {
@@ -806,7 +996,8 @@ textarea:focus {
   }
 
   .checklistGrid,
-  .methodsGrid {
+  .methodsGrid,
+  .savedPlansGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -850,7 +1041,8 @@ textarea:focus {
   }
 
   .heroActions,
-  .button {
+  .button,
+  .plannerActions {
     width: 100%;
   }
 
@@ -862,13 +1054,24 @@ textarea:focus {
   .planSummary,
   .routeGrid,
   .checklistGrid,
-  .methodsGrid {
+  .methodsGrid,
+  .savedPlansGrid {
     grid-template-columns: 1fr;
   }
 
   .routeCard,
   .checkCard,
-  .methodCard {
+  .methodCard,
+  .savedPlan {
     min-height: auto;
+  }
+
+  .savedPlan {
+    flex-direction: column;
+  }
+
+  .savedPlanActions {
+    width: 100%;
+    grid-template-columns: 1fr auto;
   }
 }
