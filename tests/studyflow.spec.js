@@ -88,3 +88,33 @@ test('muestra en el frontend un plan creado directamente en la API', async ({ pa
   await page.waitForTimeout(5500);
   await expect(page.locator('.savedPlan').filter({ hasText: subject })).toHaveCount(0);
 });
+
+test('crea una copia local cuando la API no esta disponible', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem('studyflow-plans');
+    localStorage.removeItem('studyflow-active-plan-id');
+  });
+
+  await page.route('**/api/study-plans', async (route) => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'API unavailable during test' }),
+      });
+      return;
+    }
+
+    await route.continue();
+  });
+
+  await page.goto('/');
+
+  await page.getByLabel('Materia').fill('Literatura');
+  await page.getByLabel('Temas pendientes').fill('Narrativa, Poesia, Ensayo');
+  await page.locator('.plannerPanel').getByRole('button', { name: 'Crear plan' }).click();
+
+  await expect(page.getByRole('alert')).toContainText('Se creo una copia local');
+  await expect(page.locator('.savedPlan').filter({ hasText: 'Literatura' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tu ruta para Literatura' })).toBeVisible();
+});

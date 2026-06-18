@@ -4,7 +4,19 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
-  { ignores: ['dist'] },
+  {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'backend/.venv/**',
+      'backend/.pytest_cache/**',
+      'backend/**/__pycache__/**',
+      'htmlcov/**',
+      'coverage/**',
+      '.scannerwork/**',
+      'test-results/**',
+    ],
+  },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
