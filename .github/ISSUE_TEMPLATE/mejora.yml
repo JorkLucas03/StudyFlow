@@ -1,0 +1,34 @@
+name: Propuesta de mejora
+description: Sugiere una mejora para StudyFlow.
+title: "[Mejora]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Usa esta plantilla para proponer cambios utiles para estudiantes, despliegue o calidad del proyecto.
+  - type: input
+    id: problema
+    attributes:
+      label: Problema o necesidad
+      description: Que necesidad resuelve esta mejora.
+      placeholder: Los estudiantes necesitan...
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta
+      description: Describe la solucion esperada.
+    validations:
+      required: true
+  - type: textarea
+    id: aceptacion
+    attributes:
+      label: Criterios de aceptacion
+      description: Como sabremos que la mejora quedo lista.
+      placeholder: |
+        - La app muestra...
+        - Los tests cubren...
+    validations:
+      required: true
