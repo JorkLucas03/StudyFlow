@@ -762,6 +762,11 @@ textarea:focus {
   font-weight: 900;
 }
 
+.exportButton {
+  justify-self: start;
+  min-height: 42px;
+}
+
 .routeCard,
 .checkCard,
 .methodCard {
