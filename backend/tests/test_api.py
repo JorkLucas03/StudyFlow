@@ -1,5 +1,6 @@
 import os
 from collections.abc import Generator
+from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -40,7 +41,7 @@ def client() -> Generator[TestClient, None, None]:
 def plan_payload(**overrides):
     payload = {
         "subject": "Matematicas",
-        "examDate": "2026-06-24",
+        "examDate": (date.today() + timedelta(days=14)).isoformat(),
         "hoursPerDay": 2,
         "difficulty": "Media",
         "focus": "Examen parcial",
@@ -54,10 +55,10 @@ def test_health(client: TestClient):
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "ok",
-        "deploymentCheck": "ci-cd-prueba-2026-06-11",
-    }
+    assert response.json()["status"] == "ok"
+    assert response.json()["service"] == "studyflow-api"
+    assert response.json()["version"] == "1.0.0"
+    assert response.json()["deploymentCheck"] == "cloud-run-ready-2026-06-17"
 
 
 def test_root_shows_api_info(client: TestClient):
@@ -65,6 +66,7 @@ def test_root_shows_api_info(client: TestClient):
 
     assert response.status_code == 200
     assert response.json()["name"] == "StudyFlow API"
+    assert response.json()["version"] == "1.0.0"
     assert response.json()["docs"] == "/docs"
 
 
@@ -111,3 +113,45 @@ def test_validates_payload(client: TestClient):
     )
 
     assert response.status_code == 422
+
+
+def test_rejects_blank_subject_and_topics(client: TestClient):
+    response = client.post(
+        "/api/study-plans",
+        json=plan_payload(subject="   ", topics=" , "),
+    )
+
+    assert response.status_code == 422
+
+
+def test_rejects_past_exam_date(client: TestClient):
+    response = client.post(
+        "/api/study-plans",
+        json=plan_payload(examDate="2020-01-01"),
+    )
+
+    assert response.status_code == 422
+
+
+def test_lists_study_plans_by_recent_updates(client: TestClient):
+    first = client.post(
+        "/api/study-plans",
+        json=plan_payload(subject="Historia", topics="Roma, Grecia"),
+    ).json()
+    second = client.post(
+        "/api/study-plans",
+        json=plan_payload(subject="Quimica", topics="Atomos, Enlaces"),
+    ).json()
+
+    client.put(
+        f"/api/study-plans/{first['id']}",
+        json=plan_payload(subject="Historia actualizada", topics="Imperios, Revoluciones"),
+    )
+
+    response = client.get("/api/study-plans")
+
+    assert response.status_code == 200
+    subjects = [plan["subject"] for plan in response.json()]
+    assert subjects[0] == "Historia actualizada"
+    assert "Quimica" in subjects
+    assert second["id"] != first["id"]

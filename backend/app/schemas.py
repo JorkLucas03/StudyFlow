@@ -24,7 +24,17 @@ class StudyPlanPayload(BaseModel):
     @field_validator("subject")
     @classmethod
     def clean_subject(cls, value: str) -> str:
-        return value.strip()
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("subject is required")
+        return cleaned
+
+    @field_validator("examDate")
+    @classmethod
+    def validate_exam_date(cls, value: date) -> date:
+        if value < date.today():
+            raise ValueError("examDate must be today or a future date")
+        return value
 
     @field_validator("difficulty")
     @classmethod
@@ -39,6 +49,15 @@ class StudyPlanPayload(BaseModel):
         if value not in FOCUS_OPTIONS:
             raise ValueError("focus must be one of: " + ", ".join(FOCUS_OPTIONS))
         return value
+
+    @field_validator("topics")
+    @classmethod
+    def clean_topics(cls, value: str) -> str:
+        cleaned = value.strip()
+        topics = [topic.strip() for topic in cleaned.split(",") if topic.strip()]
+        if not topics:
+            raise ValueError("topics must include at least one topic")
+        return cleaned
 
 
 class StudyPlanResponse(BaseModel):

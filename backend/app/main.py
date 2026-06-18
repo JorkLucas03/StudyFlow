@@ -37,7 +37,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DEPLOYMENT_CHECK = "ci-cd-prueba-2026-06-11"
+API_VERSION = "1.0.0"
+DEPLOYMENT_CHECK = "cloud-run-ready-2026-06-17"
 
 
 def to_response(plan: StudyPlan) -> StudyPlanResponse:
@@ -85,7 +86,13 @@ def apply_payload(plan: StudyPlan, payload: StudyPlanPayload) -> StudyPlan:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "deploymentCheck": DEPLOYMENT_CHECK}
+    return {
+        "status": "ok",
+        "service": "studyflow-api",
+        "version": API_VERSION,
+        "environment": os.getenv("APP_ENV", "development"),
+        "deploymentCheck": DEPLOYMENT_CHECK,
+    }
 
 
 @app.get("/")
@@ -93,6 +100,7 @@ def root() -> dict[str, str | list[str]]:
     return {
         "name": "StudyFlow API",
         "status": "ok",
+        "version": API_VERSION,
         "docs": "/docs",
         "health": "/health",
         "endpoints": [
