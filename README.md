@@ -21,6 +21,12 @@ Frontend React y backend FastAPI para un planificador de estudio personalizado. 
 - Workflow principal de GitHub Actions para lint, tests, build frontend y build de contenedores.
 - Workflow legado/manual para AWS Elastic Beanstalk.
 
+## Roadmap
+
+La ruta de produccion esta documentada en [`ROADMAP.md`](ROADMAP.md). Ahi se
+ordenan los siguientes hitos: despliegue en Cloud Run, conexion con Cloud SQL,
+observabilidad basica, mejoras de accesibilidad y funciones futuras para usuarios.
+
 ## Ejecutar localmente
 
 Instala dependencias del frontend:
