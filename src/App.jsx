@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  Download,
   GraduationCap,
   ListChecks,
   Moon,
@@ -205,6 +206,29 @@ function makeTaskKey(sessionIndex, taskIndex) {
 
 function countTasks(plan) {
   return plan.dailyPlan.reduce((total, session) => total + session.tasks.length, 0);
+}
+
+function buildPlanExportText(plan, subject, completedTasks = {}) {
+  const lines = [
+    `Plan de estudio: ${subject}`,
+    `Ritmo: ${plan.pace}`,
+    `Cobertura estimada: ${plan.coverage}%`,
+    `Dias hasta el examen: ${plan.daysUntilExam}`,
+    `Horas totales: ${plan.totalHours}`,
+    '',
+    'Agenda:',
+  ];
+
+  plan.dailyPlan.forEach((session, sessionIndex) => {
+    lines.push('', `${session.label} - ${session.title} (${session.time})`);
+
+    session.tasks.forEach((task, taskIndex) => {
+      const checked = completedTasks[makeTaskKey(sessionIndex, taskIndex)] ? 'x' : ' ';
+      lines.push(`- [${checked}] ${task}`);
+    });
+  });
+
+  return `${lines.join('\n')}\n`;
 }
 
 function buildStoredPlan(plan, form, source, existingPlan = {}) {
@@ -570,6 +594,35 @@ function App() {
     );
   }
 
+  function downloadPlanText() {
+    if (!activePlan) {
+      setApiStatus('validation');
+      setApiMessage('Primero crea o abre un plan para descargar la agenda.');
+      scrollToPlanner();
+      return;
+    }
+
+    const exportText = buildPlanExportText(activePlan, displayedSubject, activePlan.completedTasks || {});
+    const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const safeSubject = displayedSubject
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    link.href = url;
+    link.download = `studyflow-${safeSubject || 'plan'}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setApiStatus('ready');
+    setApiMessage(`Agenda de ${displayedSubject} descargada como texto.`);
+  }
+
   return (
     <main>
       <section className="hero" id="inicio">
@@ -862,6 +915,10 @@ function App() {
             <div className="coverageTrack" aria-hidden="true">
               <span style={{ width: `${progressPercent}%` }} />
             </div>
+            <button className="button ghost exportButton" onClick={downloadPlanText} type="button">
+              Descargar agenda
+              <Download size={18} aria-hidden="true" />
+            </button>
           </div>
         )}
 

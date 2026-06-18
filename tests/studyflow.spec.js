@@ -39,6 +39,11 @@ test('crea un plan con FastAPI, lo guarda y persiste checklist', async ({ page }
   await page.locator('.routeCard').filter({ hasText: 'Funciones' }).getByRole('checkbox').first().check();
   await expect(page.getByText('1 de 9 tareas completadas')).toBeVisible();
 
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar agenda' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('studyflow-programacion.txt');
+
   await page.reload();
 
   await expect(page.getByRole('button', { name: 'Dia' })).toBeVisible();
