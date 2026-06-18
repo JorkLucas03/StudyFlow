@@ -309,6 +309,12 @@ h3 {
   transform: translateY(-2px);
 }
 
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+}
+
 .plannerPanel {
   padding: clamp(18px, 3vw, 28px);
   border: 1px solid var(--line);
@@ -360,10 +366,28 @@ h3 {
   font-weight: 800;
 }
 
+.apiMessage.ready {
+  border-color: #bfe8d0;
+  color: #12623d;
+  background: #effaf3;
+}
+
+.apiMessage.saving {
+  border-color: #c6ddd9;
+  color: var(--teal-dark);
+  background: var(--soft);
+}
+
 .apiMessage.validation {
   border-color: #ffe09b;
   color: #6f4a00;
   background: #fff8df;
+}
+
+.apiMessage.error {
+  border-color: #ffc3c3;
+  color: #8a1717;
+  background: #fff0f0;
 }
 
 .formGrid {
@@ -552,6 +576,12 @@ textarea:focus {
   color: var(--muted);
   background: color-mix(in srgb, var(--surface) 78%, transparent);
   font-weight: 800;
+}
+
+.emptyPlans strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
 }
 
 .emptyPlans p {

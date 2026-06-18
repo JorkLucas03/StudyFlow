@@ -30,7 +30,7 @@ function validationMessageFor(field, message) {
   }
 
   if (field === 'topics') {
-    return 'Los temas pendientes no pueden superar 600 caracteres.';
+    return 'Agrega al menos un tema pendiente y mantenlo bajo 600 caracteres.';
   }
 
   if (field === 'difficulty') {

@@ -155,6 +155,8 @@ function validateStudyForm(form, content) {
 
   if (form.topics.length > MAX_TOPICS_LENGTH) {
     errors.topics = `Los temas pendientes no pueden superar ${MAX_TOPICS_LENGTH} caracteres.`;
+  } else if (splitTopics(form.topics).length === 0) {
+    errors.topics = 'Agrega al menos un tema pendiente.';
   }
 
   if (!content.difficultyOptions.includes(form.difficulty)) {
@@ -525,7 +527,9 @@ function App() {
       setActivePlanId(storedPlan.localId);
       setApiStatus('ready');
       setApiMessage('Plan creado con FastAPI y guardado en este navegador.');
-      window.setTimeout(scrollToAgenda, 120);
+      window.setTimeout(() => {
+        agendaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
     } catch (error) {
       const storedPlan = buildStoredPlan(localPlan, form, 'local');
       setSavedPlans((current) => [storedPlan, ...current].slice(0, 8));
@@ -536,7 +540,9 @@ function App() {
           ? error.message
           : 'No se pudo conectar con la API. Se creo una copia local para continuar la demo.',
       );
-      window.setTimeout(scrollToAgenda, 120);
+      window.setTimeout(() => {
+        agendaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
     }
   }
 
@@ -598,7 +604,7 @@ function App() {
             <h1>{content.appInfo.name}</h1>
             <p>{content.appInfo.summary}</p>
             <div className="heroActions">
-              <button className="button primary" onClick={handleCreatePlan} type="button">
+              <button className="button primary" disabled={apiStatus === 'saving'} onClick={handleCreatePlan} type="button">
                 {apiStatus === 'saving' ? 'Generando...' : 'Crear plan'}
                 <ArrowRight size={18} aria-hidden="true" />
               </button>
@@ -621,7 +627,10 @@ function App() {
               <span className="paceBadge">{displayedPlan.pace}</span>
             </div>
             {apiMessage && (
-              <p className={apiStatus === 'validation' ? 'apiMessage validation' : 'apiMessage'} role="status">
+              <p
+                className={`apiMessage ${apiStatus}`}
+                role={apiStatus === 'error' || apiStatus === 'validation' ? 'alert' : 'status'}
+              >
                 {apiMessage}
               </p>
             )}
@@ -710,6 +719,7 @@ function App() {
                 aria-describedby={formErrors.topics ? 'topics-error' : undefined}
                 aria-invalid={Boolean(formErrors.topics)}
                 maxLength={MAX_TOPICS_LENGTH}
+                required
                 value={form.topics}
                 onChange={(event) => updateForm('topics', event.target.value)}
                 rows="3"
@@ -745,7 +755,7 @@ function App() {
             </div>
 
             <div className="plannerActions">
-              <button className="button primary" onClick={handleCreatePlan} type="button">
+              <button className="button primary" disabled={apiStatus === 'saving'} onClick={handleCreatePlan} type="button">
                 {apiStatus === 'saving' ? 'Generando...' : 'Crear plan'}
                 <Save size={18} aria-hidden="true" />
               </button>
@@ -768,18 +778,24 @@ function App() {
             <h2>Planes guardados en este navegador</h2>
             <p>Tambien se importa aqui el ultimo plan creado desde /docs o cualquier cliente REST.</p>
           </div>
-          <button className="button ghost syncButton" onClick={() => syncLatestApiPlan({ showMessage: true })} type="button">
+          <button
+            className="button ghost syncButton"
+            disabled={apiStatus === 'saving'}
+            onClick={() => syncLatestApiPlan({ showMessage: true })}
+            type="button"
+          >
             Sincronizar API
             <RefreshCw size={18} aria-hidden="true" />
           </button>
         </div>
 
         {savedPlans.length === 0 ? (
-          <div className="emptyPlans">
+          <div className="emptyPlans" role="status">
+            <strong>No hay planes guardados todavia</strong>
             <p>Crea tu primer plan para verlo guardado aqui.</p>
           </div>
         ) : (
-          <div className="savedPlansGrid">
+          <div className="savedPlansGrid" aria-live="polite">
             {savedPlans.map((item) => (
               <article className={item.localId === activePlanId ? 'savedPlan active' : 'savedPlan'} key={item.localId}>
                 <div>
