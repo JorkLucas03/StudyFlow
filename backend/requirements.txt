@@ -1,5 +1,5 @@
 fastapi>=0.115,<1
-gunicorn>=22,<24
+gunicorn>=26.0.0,<27
 uvicorn[standard]>=0.30,<1
 sqlalchemy>=2,<3
 psycopg[binary]>=3,<4
